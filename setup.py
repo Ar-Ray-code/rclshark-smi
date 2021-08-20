@@ -1,13 +1,15 @@
 from setuptools import setup
 
-package_name = 'rclshark-smi'
+package_name = 'rclshark_smi'
 
 setup(
     name=package_name,
     version='1.0.0',
-    packages=[],
-    py_modules= [
-        'scripts.rclshark_smi',
+    packages=['rclshark_smi'],
+    data_files=[
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -27,7 +29,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'rclshark_smi = scripts.rclshark_smi:ros_main',
+            'rclshark_smi = rclshark_smi.rclshark_smi:ros_main',
         ],
     }
 )
