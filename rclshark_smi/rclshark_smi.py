@@ -15,7 +15,7 @@ from computer_msgs.srv import PcStatusSrv
 
 version_mejor = 1
 version_minor = 0
-version_revision = 0
+version_revision = 1
 version_build = str(version_mejor) + "." + str(version_minor) + "." + str(version_revision)
 
 # ==========================================================
