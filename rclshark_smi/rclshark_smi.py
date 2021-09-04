@@ -68,28 +68,54 @@ class srv_main:
 srv_class_list = list()
 ip_list = list()
 
-def show_data(input_data:list):
+def show_header():
     print("+----------------------------------------------------------------------------+")
     print("| RCLSHARK-SMI " + version_build + "\t" + "ROS-DISTRO " + os.environ['ROS_DISTRO'] + "\t\t" + datetime.datetime.now().isoformat(timespec='seconds') + "\t     |")
     print("|============================================================================|")
-    print("| ip_address\t\tcpu(%)\ttmp(*C)\tmem(%)\tdisk(%)\tps-cnt\t\t     |")
+    print("| username\t\tip_address\tcpu(%)\ttmp(*C)\tmem(%)\t\t     |")
     print("|============================================================================|")
-    terminal_col = 5
 
-    for data in input_data:
-        ip_data = int(data.ip_address.split(".")[3])
-        data.local_tag = ip_data
-
-    for data in sorted(input_data, reverse=False, key=lambda x: x.local_tag):
-        print_status = "| "+ data.ip_address + "\t\t" + str(data.cpu_percent).rjust(5) + "\t" + str(data.core_temp).rjust(5) + "\t" + str(data.mem_percent).rjust(5) + "\t" + str(data.disk_percent).rjust(5) + "\t" + str(data.process_count).rjust(5) + "\t\t" + "     |"
-        print(print_status)
-        terminal_col = terminal_col + 1
-
-    for i in range(20 - terminal_col):
-        print("|\t\t\t\t\t\t\t\t\t     |")
+def show_footer():
     print("|============================================================================|")
     print("| Press 'q'-> Enter Key to quit                                              |")
     print("+----------------------------------------------------------------------------+")
+
+def get_data_list() -> list:
+    global srv_class_list
+    global ip_list
+    
+    ip_list = get_ip_list()
+    # append ip_list to srv_list
+    if(len(ip_list) > len(srv_class_list)):
+        srv_class_list.clear()
+        for i in ip_list:
+            srv_class_list.append(srv_main(i))
+    ip_list, data = get_from_srv(srv_class_list, ip_list)
+    return data
+
+def show_data():
+    terminal_col = 5
+
+    for i in range(3):
+        input_data = get_data_list()
+
+    try:
+        for data in input_data:
+            ip_data = int(data.ip_address.split(".")[3])
+            data.local_tag = ip_data
+
+        for data in sorted(input_data, reverse=False, key=lambda x: x.local_tag):
+            print_status = "| "+ data.user_name + "\t\t" + data.ip_address + "\t" + str(data.cpu_percent).rjust(5) + "\t" + str(data.core_temp).rjust(5) + "\t" + str(data.mem_percent).rjust(5) + "\t\t"  + "     |"
+
+            print(print_status)
+            terminal_col = terminal_col + 1
+
+        for i in range(20 - terminal_col):
+            print("|\t\t\t\t\t\t\t\t\t     |")
+    except:
+        flag = 1
+
+
 
 def get_from_srv(_srv_list:list, _ip_list:list):
     # get data from srv_list
@@ -111,19 +137,10 @@ def get_ip_list() -> list:
         return []
 
 def loop():
-    global srv_class_list
-    global ip_list
+    show_header()
+    show_data()
+    show_footer()
     
-    ip_list = get_ip_list()
-        
-    # append ip_list to srv_list
-    if(len(ip_list) > len(srv_class_list)):
-        srv_class_list.clear()
-        for i in ip_list:
-            srv_class_list.append(srv_main(i))
-
-    ip_list, data = get_from_srv(srv_class_list, ip_list)
-    show_data(data)
 
 def input_timeout(timeout=10):
     (ready, _, _) = select.select([sys.stdin], [], [], timeout)
@@ -138,22 +155,28 @@ def ros_main(args = None):
     global srv_list
     rclpy.init(args=args)
 
-    while rclpy.ok():
-        t = threading.Thread(target=loop,args=())
-        t.setDaemon(True)
-        t.start()
-        t.join(timeout=5.0)
+    t = threading.Thread(target=loop,args=())
+    t.setDaemon(True)
+    t.start()
+    t.join()
 
-        if t.is_alive():
-            print("Timeout Error")
-            exit(1)
+    del t
 
-        if input_timeout(0.1) == 'q':
-            print("quit")
-            srv_class_list.clear()
-            exit(0)
+    # while rclpy.ok():
+    #     t = threading.Thread(target=loop,args=())
+    #     t.setDaemon(True)
+    #     t.start()
+    #     t.join(timeout=5.0)
+    #     if t.is_alive():
+    #         print("Timeout Error")
+    #         exit(1)
 
-        del t
+    #     if input_timeout(0.1) == 'q':
+    #         print("quit")
+    #         srv_class_list.clear()
+    #         exit(0)
+
+    #     del t
     rclpy.shutdown()
 
 if __name__=='__main__':
