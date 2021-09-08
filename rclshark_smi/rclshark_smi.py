@@ -35,7 +35,7 @@ class using_srv(Node):
     def reset_client(self) -> bool:
         self.get_status = self.create_client(PcStatusSrv, '/'+self.sub_pc_0)
         if not self.get_status.service_is_ready():
-            self.get_logger().info('service not available')
+            # self.get_logger().info('service not available')
             return 1
         self.req = PcStatusSrv.Request()
         return 0
